@@ -4,12 +4,4 @@ In the past, scenario reachability has required the use of convex sets, and prov
 We are going to instead use nonconvex scenario optimization. This takes on a "wait-and-judge" perspective and allows us to evaluate 
 the probability of nonconvex sets a-posteriori. This approach is way more efficient than previous scenario reachability efforts. 
 We can achieve acceptable probability bounds with a significantly smaller sample size. Specifically, we will calculate the reachable 
-set using tiling with Basis Functions. This can be written as the following optimization problem:
-
-
-
-We will use the following algorithm in our calculations: 
-
-Note: this algorithm runs on the scale of seconds. Additionally, I have studied this algorithm on multiple examples (to be submitted as a paper for L4DC) and know it works effectively and efficiently. 
-
-But to further convince everyone that this method is an effective approach, I will provide an a-posteriori empirical estimate of the reachable set using a one-sided Chernoff bound to verify that the computed reachable sets satisfy the guarantee that they are epsilon-accurate.
+set using tiling with Basis Functions. The mathematical formulation of this problem, along with the algorithm we will use, and numerical examples can be found in this folder in the PDF file. Note: The chosen algorithm runs on the scale of seconds. But to further convince everyone that this method is an effective approach, I will provide an a-posteriori empirical estimate of the reachable set using a one sided Chernoff bound to verify that the computed reachable sets satisfy the guarantee that they are epsilon-accurate.
