@@ -1,0 +1,8 @@
+Scenario Reachability: 
+
+In the past, scenario reachability has required the use of convex sets, and provides the sample complexity of a problem a-priori. 
+We are going to instead use nonconvex scenario optimization. This takes on a "wait-and-judge" perspective and allows us to evaluate 
+the probability of nonconvex sets a-posteriori. This approach is way more efficient than previous scenario reachability efforts. 
+We can achieve acceptable probability bounds with a significantly smaller sample size. Specifically, we will calculate the reachable 
+set using tiling with Basis Functions. This can be written as the following optimization problem:
+
