@@ -1,7 +1,21 @@
-#include PID.h
-#include <stddef.c>
+#include "PID.h"
+#include <stdint.h>
 
-#DEFINE MAX_INT = 0x7FFFFFFF
+#define MAX_INT 0x7FFFFFFF
+
+// Handle fixed point multiplication by hand
+int32_t fixedpt_mult(int32_t a, int32_t b) {
+    int64_t prod = a * b;
+    int32_t prod_clip;
+    if (prod > MAX_INT - 1) {
+        prod_clip = MAX_INT;
+    } else if (prod < -MAX_INT) {
+        prod_clip = -MAX_INT;
+    } else {
+        prod_clip = (prod << 16) >> 32; // trust me i did the math
+    }
+    return prod_clip;
+}
 
 uint32_t reset(pid_controller *pid) {
     pid->integral = 0;
@@ -9,7 +23,7 @@ uint32_t reset(pid_controller *pid) {
     pid->prev_meas = 0; // might need to set to baseline value?
 }
 
-uint32_t update(pid_controller *pid, uint32_t target, uint32_t meas) {
+uint32_t update(pid_controller *pid, int32_t target, int32_t meas) {
     // Compute error
     int32_t err = target - meas;
 
@@ -31,20 +45,8 @@ uint32_t update(pid_controller *pid, uint32_t target, uint32_t meas) {
     }
     pid->prev_meas = meas;
     
+    //subtract from prev pwm value?
+    //TODO: saturation
     return p + i + d;
 
-}
-
-// Handle fixed point multiplication by hand
-int32_t fixedpt_mult(int32_t a, int32_t b) {
-    int64_t prod = a * b;
-    int32_t prod_clip;
-    if (prod > MAX_INT - 1) {
-        prod_clip = MAX_INT;
-    } else if (p_long < -MAX_INT) {
-        prod_clip = -MAX_INT;
-    } else {
-        prod_clip = (prod << 16) >> 32; // trust me i did the math
-    }
-    return prod_clip;
 }

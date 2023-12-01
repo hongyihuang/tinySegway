@@ -1,7 +1,7 @@
-#include <stddef.h>
+#include <stdint.h>
 
-#DEFINE TIMESTEP 
-#DEFINE TIMESTEP_LOG2 //can be negative!!!
+#define TIMESTEP 0.5
+#define TIMESTEP_LOG2 -1 //can be negative!!!
 
 typedef struct {
     //Parameters
@@ -15,6 +15,8 @@ typedef struct {
 
     //Derivative
     int32_t prev_meas;
+
+    //Last PWM?
 
 } pid_controller;
 
