@@ -32,7 +32,8 @@
       <freejoint/>
       <light name="top light" pos="0 0 2" mode="trackcom" diffuse=".5 .5 .5"/>
       <geom name="chasis" pos="-0.07 0 0.1" type="box" size="0.02 0.05 0.1" mass="0.1"/>
-      <site name="gyro_site" pos="-0.07 0 0.05" type="sphere" size="0.01"/>
+      <!-- <site name="gyro_site" pos="-0.07 0 0.05" type="sphere" size="0.01"/> -->
+      <site name="accel_site" pos="-0.07 0 0.05" type="sphere" size="0.01"/>
       <body name="left wheel" pos="-.07 .06 0" zaxis="0 1 0">
         <joint name="left"/>
         <geom class="wheel"/>
@@ -53,15 +54,15 @@
       <joint joint="left" coef=".5"/>
       <joint joint="right" coef=".5"/>
     </fixed>
-    <fixed name="turn">
+    <!-- <fixed name="turn">
       <joint joint="left" coef="-.5"/>
       <joint joint="right" coef=".5"/>
-    </fixed>
+    </fixed> -->
   </tendon>
 
   <actuator>
     <motor name="forward" tendon="forward" ctrlrange="-1 1"/>
-    <motor name="turn" tendon="turn" ctrlrange="-1 1"/>
+    <!-- <motor name="turn" tendon="turn" ctrlrange="-1 1"/> -->
   </actuator>
 
   <!-- <sensor>
@@ -70,6 +71,7 @@
   </sensor> -->
 
   <sensor>
-        <gyro name="chassis_gyro" site="gyro_site"/>
+        <!-- <gyro name="chassis_gyro" site="gyro_site"/> -->
+        <accelerometer name="chassis_accel" site="accel_site"/>
   </sensor>
 </mujoco>
