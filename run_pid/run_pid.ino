@@ -7,20 +7,24 @@
 LSM6 imu;
 
 extern Balboa32U4Motors motors;
-
-// 100Hz
-const uint8_t UPDATE_FREQ_MS = 10;
-const uint8_t CALIBRATION_ITERATIONS = 100;
-
-static int32_t gYZero;
+extern Balboa32U4Encoders encoders;
 
 int32_t new_motor;
 pid_controller pid_theta;
 
 char report[80];
 
-int32_t motorSpeed;
-int32_t angle, angleRate;
+// 100Hz
+const uint8_t UPDATE_FREQ_MS = 10;
+const uint8_t CALIBRATION_ITERATIONS = 100;
+const int16_t DISTANCE_RESPONSE = 73;
+const int16_t SPEED_RESPONSE = 3300;
+const int16_t DISTANCE_DIFF_RESPONSE = -50;
+
+static int32_t gYZero;
+static int32_t motorSpeed;
+static int32_t angle, angleRate;//, angleSum;
+static int32_t distanceLeft, speedLeft, distanceRight, speedRight;
 
 // Parameters & methods taken directly from Balboa32U4 library example
 void standup() {
@@ -51,6 +55,7 @@ void calibrate() {
   // multiply by 180000/pi to convert to milidegrees
   // Measure angle using accelerometer
   angle = atan2(imu.a.z, imu.a.x) * 57296;
+  //angleSum = 0;
 
   snprintf(report, sizeof(report), "gyro bias:%6d angle:%6d", gYZero, angle);
   Serial.println(report);
@@ -66,41 +71,73 @@ void balance() {
   lastMillis = ms;
 
   // Read angleRate
-  imu.readAcc();
+  imu.read();
 
   // convert & integrate
   // Convert from millideg/s to deg/s.
   angleRate = (imu.g.y - gYZero) / 29;
   angle += angleRate * UPDATE_FREQ_MS;
+  //angleSum += angle;
+
+  static int16_t lastCountsLeft;
+  int16_t countsLeft = encoders.getCountsLeft();
+  speedLeft = (countsLeft - lastCountsLeft);
+  distanceLeft += countsLeft - lastCountsLeft;
+  lastCountsLeft = countsLeft;
+
+  static int16_t lastCountsRight;
+  int16_t countsRight = encoders.getCountsRight();
+  speedRight = (countsRight - lastCountsRight);
+  distanceRight += countsRight - lastCountsRight;
+  lastCountsRight = countsRight;
+
+  //if (angleSum > 1024) angleSum = 1024;
+  //if (angleSum < -1024) angleSum = -1024;
+  //angleSum = angleSum > 300 ? 300 : angleSum < -300 ? -300 : angleSum;
 
   angle = angle * 999 / 1000;
+  //angleSum = angleSum * 999 / 1000;
 
   // Run PID velocity update -> new theta
   const int16_t ANGLE_RATE_RATIO = 140;
   const int16_t ANGLE_RESPONSE = 11;
   const int16_t GEAR_RATIO = 111;
 
-  int32_t risingAngleOffset = angleRate * ANGLE_RATE_RATIO + angle;
-  motorSpeed += ANGLE_RESPONSE * risingAngleOffset / 100 / GEAR_RATIO;
+  // two targets are 0, so no minus error
+  int32_t risingAngleOffset = angleRate * ANGLE_RATE_RATIO + angle;// + (angleSum>>1) - 1024;
+  motorSpeed += (
+    ANGLE_RESPONSE * risingAngleOffset
+    + DISTANCE_RESPONSE * (distanceLeft + distanceRight)
+    + SPEED_RESPONSE * (speedLeft + speedRight)
+    ) / 100 / GEAR_RATIO;
 
   // Set theta target
   if (motorSpeed > 300) motorSpeed = 300;
   if (motorSpeed < -300) motorSpeed = -300;
 
-  motors.setSpeeds(motorSpeed, motorSpeed);
+  //motors.setSpeeds(motorSpeed, motorSpeed);
+  int16_t distanceDiff = distanceLeft - distanceRight;
 
-  snprintf(report, sizeof(report), "ang:%6ld del:%6ld spd:%6ld", angle, angleRate, motorSpeed);
-  Serial.println(report);
-  snprintf(report, sizeof(report), "g.x:%6d g.y:%6d g.z:%6d", imu.g.x, imu.g.y, imu.g.z);
-  Serial.println(report);
-  snprintf(report, sizeof(report), "a.x:%6d a.y:%6d a.z:%6d", imu.a.x, imu.a.y, imu.a.z);
+  motors.setSpeeds(
+    motorSpeed + distanceDiff * DISTANCE_DIFF_RESPONSE / 100,
+    motorSpeed - distanceDiff * DISTANCE_DIFF_RESPONSE / 100);
+
+  //snprintf(report, sizeof(report), "ang:%6ld del:%6ld spd:%6ld", angle, angleRate, motorSpeed);
+  //Serial.println(report);
+  //Serial.println(risingAngleOffset);
+  //snprintf(report, sizeof(report), "g.x:%6d g.y:%6d g.z:%6d", imu.g.x, imu.g.y, imu.g.z);
+  //Serial.println(report);
+  //snprintf(report, sizeof(report), "a.x:%6d a.y:%6d a.z:%6d", imu.a.x, imu.a.y, imu.a.z);
+  //Serial.println(report);
+
+  snprintf(report, sizeof(report), "%6ld %6ld", angle, angleRate, motorSpeed);
   Serial.println(report);
 }
 
 void setup() {
   // put your setup code here, to run once:
-  //init imu
-
+  
+  // Init imu
   Serial.begin(9600);
   Wire.begin();
   if (!imu.init()) {
