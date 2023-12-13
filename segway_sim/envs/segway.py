@@ -25,7 +25,7 @@ class SegwayEnv(MujocoEnv, utils.EzPickle):
         utils.EzPickle.__init__(self, **kwargs)
         self.step_count = 0
         self.max_ep_len = max_ep_len
-        observation_space = Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float64)
+        observation_space = Box(low=-np.inf, high=np.inf, shape=(6,), dtype=np.float64)
         MujocoEnv.__init__(
             self,
             "segway.xml",
@@ -38,7 +38,7 @@ class SegwayEnv(MujocoEnv, utils.EzPickle):
     def step(self, a):
         self.do_simulation(a, self.frame_skip)
         ob = self._get_obs()
-        if self.data.qpos[3] > 0.8:
+        if self.data.qpos[3] > 0.9:
             reward = np.array(self.data.qpos[3])
         else:
             reward = np.array(-1)
