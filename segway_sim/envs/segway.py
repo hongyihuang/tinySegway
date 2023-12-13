@@ -25,7 +25,7 @@ class SegwayEnv(MujocoEnv, utils.EzPickle):
         utils.EzPickle.__init__(self, **kwargs)
         self.step_count = 0
         self.max_ep_len = max_ep_len
-        observation_space = Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float64)
+        observation_space = Box(low=-np.inf, high=np.inf, shape=(6,), dtype=np.float64)
         MujocoEnv.__init__(
             self,
             "segway.xml",
