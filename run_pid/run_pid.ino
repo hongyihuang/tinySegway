@@ -54,7 +54,10 @@ void calibrate() {
 
   // multiply by 180000/pi to convert to milidegrees
   // Measure angle using accelerometer
+  unsigned long before = millis();
   angle = atan2(imu.a.z, imu.a.x) * 57296;
+  Serial.println("Time taken");
+  Serial.println(millis() - before);
   //angleSum = 0;
 
   snprintf(report, sizeof(report), "gyro bias:%6d angle:%6d", gYZero, angle);
@@ -75,7 +78,9 @@ void balance() {
 
   // convert & integrate
   // Convert from millideg/s to deg/s.
-  angleRate = (imu.g.y - gYZero) / 29;
+  // 1/29*2^8 ~= 9
+  //angleRate = (imu.g.y - gYZero) / 29;
+  angleRate = (imu.g.y - gYZero) * 9 >> 8; // 9 * 2^(-8)
   angle += angleRate * UPDATE_FREQ_MS;
   //angleSum += angle;
 
@@ -104,12 +109,14 @@ void balance() {
   const int16_t GEAR_RATIO = 111;
 
   // two targets are 0, so no minus error
+  // 1/100/111*2^16 = 5.9
+  // (* 6) >>16
   int32_t risingAngleOffset = angleRate * ANGLE_RATE_RATIO + angle;// + (angleSum>>1) - 1024;
-  motorSpeed += (
+  motorSpeed += ((
     ANGLE_RESPONSE * risingAngleOffset
     + DISTANCE_RESPONSE * (distanceLeft + distanceRight)
     + SPEED_RESPONSE * (speedLeft + speedRight)
-    ) / 100 / GEAR_RATIO;
+    ) * 6) >> 16;  // / 100 / GEAR_RATIO;
 
   // Set theta target
   if (motorSpeed > 300) motorSpeed = 300;
@@ -118,9 +125,13 @@ void balance() {
   //motors.setSpeeds(motorSpeed, motorSpeed);
   int16_t distanceDiff = distanceLeft - distanceRight;
 
-  motors.setSpeeds(
-    motorSpeed + distanceDiff * DISTANCE_DIFF_RESPONSE / 100,
-    motorSpeed - distanceDiff * DISTANCE_DIFF_RESPONSE / 100);
+  int16_t lSpeed, rSpeed;
+  //lSpeed = motorSpeed + distanceDiff * DISTANCE_DIFF_RESPONSE / 100;
+  //rSpeed = motorSpeed - distanceDiff * DISTANCE_DIFF_RESPONSE / 100;
+  lSpeed = motorSpeed - (distanceDiff >> 2);
+  rSpeed = motorSpeed + (distanceDiff >> 2);
+
+  motors.setSpeeds(lSpeed, rSpeed);
 
   //snprintf(report, sizeof(report), "ang:%6ld del:%6ld spd:%6ld", angle, angleRate, motorSpeed);
   //Serial.println(report);
@@ -130,7 +141,7 @@ void balance() {
   //snprintf(report, sizeof(report), "a.x:%6d a.y:%6d a.z:%6d", imu.a.x, imu.a.y, imu.a.z);
   //Serial.println(report);
 
-  snprintf(report, sizeof(report), "%6ld %6ld", angle, angleRate, motorSpeed);
+  snprintf(report, sizeof(report), "%6ld, %6ld, %6ld, %6ld, %6ld, %6ld, %6d, %6d", angle, angleRate, distanceLeft, distanceRight, speedLeft, speedRight, lSpeed, rSpeed);
   Serial.println(report);
 }
 
