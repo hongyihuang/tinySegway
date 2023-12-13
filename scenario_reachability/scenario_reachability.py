@@ -86,7 +86,7 @@ def make_sample():
 
 
 def main():
-    # theta = np.loadtxt("phi2.txt")
+    t = np.loadtxt("phi2.txt")
     # phi =  np.loadtxt("theta2.txt")
     # theta = np.subtract(1.5708 ,np.arcsin(theta))
     # data = np.vstack([theta, phi]).T
@@ -96,7 +96,7 @@ def main():
     acc_y = np.loadtxt("acc_y2_rl.txt")
     x = np.loadtxt("x_rl_2.txt")
     theta = np.arctan(np.divide(acc_z, acc_x))
-    data = np.vstack([theta, acc_x]).T
+    data = np.vstack([theta, x]).T
 
     # data_new = []
     # for n in range(len(data)):
@@ -110,9 +110,9 @@ def main():
   
     plotting = 0
     # Alo = [68.75493542, -3.43774677]
-    Alo = [-2, -60]
+    Alo = [-2, -.02]
     #Alo = np.rad2deg(Alo)
-    Ahi = [2, 70]
+    Ahi = [2, .02]
     #Ahi = np.rad2deg(Ahi)
     # Ahi = [91.67324722,  3.43774677]
     Ax = [Alo[0], Ahi[0]]
@@ -120,7 +120,7 @@ def main():
     Awidth = np.subtract(Ahi, Alo)
 
     xy_num = 0
-    ell = 20
+    ell = 30
     Axspan = np.linspace(Ax[0],Ax[1],ell+1)
     Ayspan = np.linspace(Ay[0],Ay[1],ell+1)
 
@@ -181,7 +181,7 @@ def main():
         plt.xticks(Axspan)
         plt.yticks(Ayspan)
         plt.xlabel('$\Theta$')
-        plt.ylabel('$\dot\Theta$')
+        plt.ylabel('$x$')
         plt.show()
 
     print(xy_num, xy)
