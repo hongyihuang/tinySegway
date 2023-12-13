@@ -38,7 +38,7 @@ class SegwayEnv(MujocoEnv, utils.EzPickle):
     def step(self, a):
         self.do_simulation(a, self.frame_skip)
         ob = self._get_obs()
-        if self.data.qpos[3] > 0.6:
+        if self.data.qpos[3] > 0.9:
             reward = np.array(self.data.qpos[3])
         else:
             reward = np.array(-1)
